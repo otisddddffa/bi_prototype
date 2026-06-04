@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>仓库作业效率看板 - 看数逻辑草稿</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --ink: #202124;
+      --muted: #6b7280;
+      --line: #e5eaf2;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --good: #15803d;
+      --good-soft: #ecfdf3;
+      --warn: #b7791f;
+      --warn-soft: #fff7e6;
+      --bad: #c24141;
+      --bad-soft: #fff1f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 32px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .title-block {
+      display: grid;
+      gap: 8px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .story {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .story-panel {
+      width: min(720px, 52vw);
+      display: grid;
+      gap: 6px;
+    }
+
+    .date-filter {
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      align-items: center;
+      gap: 8px;
+      justify-self: start;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .date-filter input {
+      min-width: 150px;
+      border: 1px solid #dbe5f1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    .section {
+      margin-bottom: 16px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 2px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .metric-card {
+      min-height: 224px;
+    }
+
+    .metric-card.compact {
+      min-height: 208px;
+    }
+
+    .metric-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      margin: 8px 0 4px;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .metric-meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .staff-split {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .staff-split span {
+      margin-right: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .good {
+      color: var(--good);
+    }
+
+    .warn {
+      color: var(--warn);
+    }
+
+    .bad {
+      color: var(--bad);
+    }
+
+    .pill.good {
+      background: var(--good-soft);
+    }
+
+    .pill.warn {
+      background: var(--warn-soft);
+    }
+
+    .pill.bad {
+      background: var(--bad-soft);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      background: #fafbfe;
+      font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .period-table td {
+      min-width: 170px;
+    }
+
+    .period-cell {
+      display: grid;
+      gap: 3px;
+    }
+
+    .period-main {
+      font-weight: 800;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 132px 1fr 64px;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .track {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf1f7;
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--blue);
+    }
+
+    .trend-box {
+      display: grid;
+      gap: 10px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      min-height: 240px;
+    }
+
+    .trend-box-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .trend-kicker {
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .trend-note {
+      color: #8b95a7;
+      font-size: 12px;
+    }
+
+    .spark {
+      width: 100%;
+      height: 88px;
+    }
+
+    .spark path.actual {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
+    .spark path.target {
+      fill: none;
+      stroke: #a6b0c3;
+      stroke-width: 2;
+      stroke-dasharray: 5 5;
+    }
+
+    @media (max-width: 980px) {
+      .topbar,
+      .section-head {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .story {
+        text-align: left;
+        width: 100%;
+      }
+
+      .story-panel {
+        width: 100%;
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="title-block">
+        <h1>仓库作业效率看板</h1>
+        <label class="date-filter">
+          <span>统计日期</span>
+          <input type="date" value="2026-06-02" />
+        </label>
+      </div>
+      <div class="story-panel">
+        <div class="story">看数故事线：先看结果 -> 看趋势 -> 看周期判断 -> 看业务量与结构 -> 定位业务模式/SLA -> 拆总时长构成 -> 看人员作业表现 -> 跟进异常单据</div>
+      </div>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>1. 核心结果</h2>
+          <p class="subtle">先判断当前运营结果是否达标，主数只展示真实业务指标，并把目标达成状态单独表达。</p>
+        </div>
+      </div>
+      <div class="grid grid-3">
+        <article class="card metric-card">
+          <div class="metric-title">仓库操作人效</div>
+          <div class="metric-value good">800</div>
+          <div class="metric-meta">目标 750 单/人 | 差距 +50 | 达成率 106%</div>
+          <p class="subtle">人效 = 总单量 / 总出勤人天</p>
+        </article>
+        <article class="card metric-card">
+          <div class="metric-title">入库及时率</div>
+          <div class="metric-value bad">94.0%</div>
+          <div class="metric-meta">目标 96.0% | 较目标 -2.0 个百分点</div>
+          <p class="subtle">主看及时率，达成状态由差距判断。</p>
+        </article>
+        <article class="card metric-card">
+          <div class="metric-title">订单及时率</div>
+          <div class="metric-value good">95.6%</div>
+          <div class="metric-meta">目标 95.0% | 较目标 +0.6 个百分点</div>
+          <p class="subtle">按业务模式 SLA 判断：B2C 24h，B2B/头程/FBA/三方仓 72h，京东 96h。</p>
+        </article>
+      </div>
+      <div class="grid grid-3" style="margin-top:16px">
+        <article class="trend-box">
+          <div class="trend-box-head">
+            <h3>人效近 30 天</h3>
+            <span class="trend-kicker">趋势向上</span>
+          </div>
+          <svg class="spark" viewBox="0 0 300 88" preserveAspectRatio="none" aria-hidden="true">
+            <path class="target" d="M0 58 L75 50 L150 42 L225 34 L300 26"></path>
+            <path class="actual" d="M0 60 L75 52 L150 43 L225 35 L300 33"></path>
+          </svg>
+          <p class="subtle">实际上升，但当日和 MTD 仍低于目标。</p>
+          <p class="trend-note">支持切换按月 / 季 / 年趋势查看，用于区分短周期波动和长周期变化。</p>
+        </article>
+        <article class="trend-box">
+          <div class="trend-box-head">
+            <h3>入库及时率近 30 天</h3>
+            <span class="trend-kicker">持续承压</span>
+          </div>
+          <svg class="spark" viewBox="0 0 300 88" preserveAspectRatio="none" aria-hidden="true">
+            <path class="target" d="M0 28 L75 28 L150 28 L225 28 L300 28"></path>
+            <path class="actual" d="M0 38 L75 42 L150 47 L225 52 L300 54"></path>
+          </svg>
+          <p class="subtle">连续低于目标，需要进入内验/外验拆解。</p>
+          <p class="trend-note">支持切换按月 / 季 / 年趋势查看，用于区分短周期波动和长周期变化。</p>
+        </article>
+        <article class="trend-box">
+          <div class="trend-box-head">
+            <h3>订单及时率近 30 天</h3>
+            <span class="trend-kicker">当日达标</span>
+          </div>
+          <svg class="spark" viewBox="0 0 300 88" preserveAspectRatio="none" aria-hidden="true">
+            <path class="target" d="M0 44 L75 44 L150 44 L225 44 L300 44"></path>
+            <path class="actual" d="M0 58 L75 52 L150 47 L225 42 L300 36"></path>
+          </svg>
+          <p class="subtle">当日达标，但 MTD 仍有欠账。</p>
+          <p class="trend-note">支持切换按月 / 季 / 年趋势查看，用于区分短周期波动和长周期变化。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>2. 周期判断</h2>
+          <p class="subtle">单独观察当日 / MTD / QTD / YTD，判断问题是否已经影响周期经营目标。</p>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table class="period-table">
+          <thead>
+            <tr>
+              <th>指标</th>
+              <th>当日</th>
+              <th>MTD</th>
+              <th>QTD</th>
+              <th>YTD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>仓库操作人效</td>
+              <td><div class="period-cell"><span class="period-main warn">441 / 450</span><span class="subtle">达成率 98.0%</span></div></td>
+              <td><div class="period-cell"><span class="period-main warn">428 / 450</span><span class="subtle">达成率 95.1%</span></div></td>
+              <td><div class="period-cell"><span class="period-main good">446 / 445</span><span class="subtle">达成率 100.2%</span></div></td>
+              <td><div class="period-cell"><span class="period-main good">452 / 448</span><span class="subtle">达成率 100.9%</span></div></td>
+            </tr>
+            <tr>
+              <td>入库及时率</td>
+              <td><div class="period-cell"><span class="period-main bad">94.0%</span><span class="subtle">目标 96.0% | 较目标 -2.0 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main bad">93.6%</span><span class="subtle">目标 96.0% | 较目标 -2.4 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main warn">95.1%</span><span class="subtle">目标 96.0% | 较目标 -0.9 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main warn">95.8%</span><span class="subtle">目标 96.0% | 较目标 -0.2 个百分点</span></div></td>
+            </tr>
+            <tr>
+              <td>订单及时率</td>
+              <td><div class="period-cell"><span class="period-main good">95.6%</span><span class="subtle">目标 95.0% | 较目标 +0.6 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main warn">94.2%</span><span class="subtle">目标 95.0% | 较目标 -0.8 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main good">95.3%</span><span class="subtle">目标 95.0% | 较目标 +0.3 个百分点</span></div></td>
+              <td><div class="period-cell"><span class="period-main good">95.7%</span><span class="subtle">目标 95.2% | 较目标 +0.5 个百分点</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>3. 业务量与结构</h2>
+          <p class="subtle">看单量、出入库结构和人员投入，判断指标变化是否受业务规模或结构变化影响。</p>
+        </div>
+      </div>
+      <div class="grid grid-4">
+        <article class="card metric-card compact">
+          <div class="metric-title">总单量</div>
+          <div class="metric-value">16,240</div>
+          <div class="metric-meta">较前日 +2.7%</div>
+          <p class="subtle">当日总处理单量</p>
+        </article>
+        <article class="card metric-card compact">
+          <div class="metric-title">入库单量</div>
+          <div class="metric-value">6,420</div>
+          <div class="metric-meta">采购入库为主</div>
+          <p class="subtle">入库侧业务体量</p>
+        </article>
+        <article class="card metric-card compact">
+          <div class="metric-title">出库单量</div>
+          <div class="metric-value">9,820</div>
+          <div class="metric-meta">B2C 占比最高</div>
+          <p class="subtle">出库侧业务体量</p>
+        </article>
+        <article class="card metric-card compact">
+          <div class="metric-title">总出勤</div>
+          <div class="metric-value">120</div>
+          <div class="metric-meta">自有员工 / 试用工 / 临时工</div>
+          <div class="staff-split">
+            <span>自有员工 82 人</span>
+            <span>试用工 8 人</span>
+            <span>临时工 30 人</span>
+          </div>
+        </article>
+      </div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <article class="card">
+          <h3>入库业务结构</h3>
+          <div class="bar-list">
+            <div class="bar-row"><span>采购入库</span><div class="track"><div class="fill" style="width:46%"></div></div><strong>46%</strong></div>
+            <div class="bar-row"><span>售后调拨</span><div class="track"><div class="fill" style="width:33%"></div></div><strong>33%</strong></div>
+            <div class="bar-row"><span>其他入库</span><div class="track"><div class="fill" style="width:21%"></div></div><strong>21%</strong></div>
+          </div>
+        </article>
+        <article class="card">
+          <h3>出库业务结构</h3>
+          <div class="bar-list">
+            <div class="bar-row"><span>B2C</span><div class="track"><div class="fill" style="width:44%"></div></div><strong>44%</strong></div>
+            <div class="bar-row"><span>B2B</span><div class="track"><div class="fill" style="width:23%"></div></div><strong>23%</strong></div>
+            <div class="bar-row"><span>头程 / FBA / 三方仓</span><div class="track"><div class="fill" style="width:23%"></div></div><strong>23%</strong></div>
+            <div class="bar-row"><span>京东</span><div class="track"><div class="fill" style="width:10%"></div></div><strong>10%</strong></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>4. 问题定位：入库环节</h2>
+          <p class="subtle">入库按当前可落地字段拆到内验、外验；每个百分比都配单量，避免只看比例误判。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>环节</th>
+              <th>总单量</th>
+              <th>及时单量</th>
+              <th>不及时单量</th>
+              <th>及时率</th>
+              <th>目标</th>
+              <th>差距</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>内验</td>
+              <td>3,760</td>
+              <td>3,602</td>
+              <td>158</td>
+              <td class="warn">95.8%</td>
+              <td>96.0%</td>
+              <td class="warn">-0.2 个百分点</td>
+            </tr>
+            <tr>
+              <td>外验</td>
+              <td>2,660</td>
+              <td>2,458</td>
+              <td>202</td>
+              <td class="bad">92.4%</td>
+              <td>96.0%</td>
+              <td class="bad">-3.6 个百分点</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>5. 问题定位：出库作业时效与耗时构成</h2>
+          <p class="subtle">不同业务模式的作业终点不同：B2C 看完整出库，B2B/头程/京东看仓内装箱完成。这里衡量仓库作业效率，不等同于所有业务的最终发货履约时效。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>业务模式</th>
+              <th>时效对象</th>
+              <th>SLA</th>
+              <th>起点</th>
+              <th>终点</th>
+              <th>单量</th>
+              <th>平均口径时长</th>
+              <th>超 SLA 单量</th>
+              <th>及时率</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>B2C</td><td>出库完成时效</td><td>24h</td><td>订单审核时间</td><td>出库时间</td><td>5,320</td><td>18.6h</td><td>193</td><td class="good">96.4%</td></tr>
+            <tr><td>B2B</td><td>装箱完成时效</td><td>72h</td><td>拣货单生成时间</td><td>装箱完成时间</td><td>3,180</td><td>61.4h</td><td>149</td><td class="warn">95.3%</td></tr>
+            <tr><td>头程 / FBA / 三方仓</td><td>装箱完成时效</td><td>72h</td><td>拣货单生成时间</td><td>装箱完成时间</td><td>3,060</td><td>64.8h</td><td>160</td><td class="warn">94.8%</td></tr>
+            <tr><td>京东</td><td>装箱完成时效</td><td>96h</td><td>拣货单生成时间</td><td>装箱完成时间</td><td>1,470</td><td>82.5h</td><td>71</td><td class="warn">95.2%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>业务模式</th>
+              <th>SLA</th>
+              <th>平均口径时长</th>
+              <th>拣货时长</th>
+              <th>装箱/组包时长</th>
+              <th>称重时长</th>
+              <th>其他耗时</th>
+              <th>最长耗时动作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>B2C</td><td>24h</td><td>18.6h</td><td>5.2h</td><td>6.4h</td><td>2.1h</td><td>4.9h</td><td>组包</td></tr>
+            <tr><td>B2B</td><td>72h</td><td>61.4h</td><td>18.6h</td><td>25.8h</td><td>6.2h</td><td>10.8h</td><td>装箱</td></tr>
+            <tr><td>头程 / FBA / 三方仓</td><td>72h</td><td>64.8h</td><td>19.4h</td><td>27.6h</td><td>6.8h</td><td>11.0h</td><td>装箱</td></tr>
+            <tr><td>京东</td><td>96h</td><td>82.5h</td><td>21.2h</td><td>34.0h</td><td>7.6h</td><td>19.7h</td><td>装箱</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>6. 人员作业表现：业务模式 + 作业动作 + 人员/账号</h2>
+          <p class="subtle">人员不用于拆订单及时率；这里只看同一业务模式、同一作业动作下的作业量和效率，异常单量仅作为跟进线索。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>业务模式</th>
+              <th>作业动作</th>
+              <th>人员/账号</th>
+              <th>出勤</th>
+              <th>处理单量</th>
+              <th>单位效率</th>
+              <th>作业量占比</th>
+              <th>关联异常单量</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>入库</td><td>外验</td><td>赵坤</td><td>20 天</td><td>1,320</td><td>66 单/天</td><td>31%</td><td class="bad">21</td></tr>
+            <tr><td>B2C</td><td>组包</td><td>李婷</td><td>21 天</td><td>2,860</td><td>136 单/天</td><td>28%</td><td class="warn">18</td></tr>
+            <tr><td>B2B</td><td>装箱</td><td>张明</td><td>22 天</td><td>2,140</td><td>97 单/天</td><td>34%</td><td>12</td></tr>
+            <tr><td>头程 / FBA / 三方仓</td><td>发货</td><td>王超</td><td>21 天</td><td>1,480</td><td>71 单/天</td><td>22%</td><td class="bad">18</td></tr>
+            <tr><td>京东</td><td>装箱</td><td>陈洁</td><td>22 天</td><td>920</td><td>42 单/天</td><td>16%</td><td class="warn">9</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>7. 异常单据明细</h2>
+          <p class="subtle">最终跟进必须落到单据。这里不要求原因文本，只保留 BI 能稳定提供的结构化字段。</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>单据号</th>
+              <th>KPI</th>
+              <th>业务类型</th>
+              <th>SLA</th>
+              <th>当前/末次动作</th>
+              <th>责任人/账号</th>
+              <th>开始时间</th>
+              <th>完成时间</th>
+              <th>超时长</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>IB202606020026</td><td>入库及时率</td><td>入库</td><td>24h</td><td>外验</td><td>赵坤</td><td>2026-06-01 16:00</td><td>2026-06-02 17:35</td><td class="bad">1h35m</td></tr>
+            <tr><td>OB202606020071</td><td>订单及时率</td><td>B2C</td><td>24h</td><td>组包</td><td>李婷</td><td>2026-06-01 20:00</td><td>2026-06-02 20:26</td><td class="warn">26m</td></tr>
+            <tr><td>OB202606020017</td><td>订单及时率</td><td>B2B</td><td>72h</td><td>装箱</td><td>张明</td><td>2026-05-30 10:30</td><td>2026-06-02 11:12</td><td class="warn">42m</td></tr>
+            <tr><td>OB202606020041</td><td>订单及时率</td><td>头程 / FBA / 三方仓</td><td>72h</td><td>发货</td><td>王超</td><td>2026-05-30 14:00</td><td>2026-06-02 15:08</td><td class="bad">1h08m</td></tr>
+            <tr><td>JD202606020009</td><td>订单及时率</td><td>京东</td><td>96h</td><td>装箱</td><td>陈洁</td><td>2026-05-29 18:30</td><td>2026-06-02 19:11</td><td class="warn">41m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
