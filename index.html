@@ -1,1 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>仓库作业效率看板 - 看数逻辑草稿</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --ink: #202124;
+      --muted: #6b7280;
+      --line: #e5eaf2;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --good: #15803d;
+      --good-soft: #ecfdf3;
+      --warn: #b7791f;
+      --warn-soft: #fff7e6;
+      --bad: #c24141;
+      --bad-soft: #fff1f1;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 32px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .title-block {
+      display: grid;
+      gap: 8px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .story {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: var(--muted);
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .story-panel {
+      width: min(720px, 52vw);
+      display: grid;
+      gap: 6px;
